@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Field Asset Capture - Trial Version</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --error: #f44336;
+      --dark: #1d3557;
+      --light: #f8f9fa;
+      --field-green: #38b000;
+      --field-orange: #ff7b00;
+      --field-yellow: #ffd60a;
+      --gps-active: #38b000;
+      --gps-inactive: #e5383b;
+      --trial-badge: #f44336;
+    }
+    
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0a1128, #1a2a6c);
+      color: var(--light);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    
+    .app-header {
+      background: linear-gradient(to right, #0a1128, #1a2a6c);
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 10;
+      border-bottom: 3px solid var(--field-yellow);
+      position: relative;
+    }
+    
+    .app-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin: 0;
+      background: linear-gradient(to right, var(--field-yellow), var(--field-orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    #cameraContainer {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      margin-bottom: 1.5rem;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+      aspect-ratio: 4/3;
+      border: 3px solid var(--field-green);
+    }
+    
+    #view {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    
+    .camera-placeholder {
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .camera-placeholder i {
+      font-size: 4rem;
+      color: var(--field-yellow);
+      margin-bottom: 1rem;
+    }
+    
+    .camera-placeholder h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: #f8f9fa;
+    }
+    
+    .camera-placeholder p {
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+      max-width: 500px;
+      line-height: 1.6;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      user-select: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .btn:active {
+      transform: scale(0.95);
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: 2px solid #3a56e8;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background: var(--secondary);
+    }
+    
+    .btn-success {
+      background: var(--field-green);
+      color: var(--dark);
+      border: 2px solid #32a000;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+      background: #32a000;
+    }
+    
+    .btn-warning {
+      background: var(--field-orange);
+      color: #fff;
+      border: 2px solid #e56b00;
+    }
+    
+    .btn-warning:hover:not(:disabled) {
+      background: #e56b00;
+    }
+    
+    .btn-error {
+      background: var(--error);
+      color: #fff;
+      border: 2px solid #d32f2f;
+    }
+    
+    .btn-error:hover:not(:disabled) {
+      background: #e53935;
+    }
+    
+    #snap {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--field-yellow);
+      color: #333;
+      border: none;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      transition: all 0.2s ease;
+      border: 3px solid rgba(255,255,255,0.8);
+    }
+    
+    #snap:hover {
+      transform: translateX(-50%) scale(1.05);
+    }
+    
+    #snap:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+    
+    #formArea {
+      background: rgba(29,53,87,0.9);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      display: none;
+      backdrop-filter: blur(10px);
+      margin-top: 1rem;
+      border: 2px solid var(--field-yellow);
+    }
+    
+    .form-title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.6rem;
+      color: var(--field-yellow);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--field-yellow);
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 12px;
+      border: 2px solid var(--field-green);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--field-yellow);
+      box-shadow: 0 0 0 3px rgba(255,214,10,0.3);
+    }
+    
+    input::placeholder, textarea::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    
+    #save {
+      width: 100%;
+      padding: 1.2rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: var(--field-green);
+      border: 2px solid #32a000;
+    }
+    
+    #save:hover {
+      background: #32a000;
+    }
+    
+    #msg {
+      text-align: center;
+      margin-top: 1rem;
+      font-weight: 600;
+      min-height: 1.5rem;
+      color: var(--field-yellow);
+      font-size: 1.1rem;
+    }
+    
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: rgba(10,17,40,0.8);
+      border-radius: 50px;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
+      border: 2px solid var(--field-green);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .gps-status, .db-status, .camera-status, .trial-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .gps-status i, .db-status i, .camera-status i, .trial-status i {
+      font-size: 1.3rem;
+    }
+    
+    .gps-active {
+      color: var(--gps-active);
+    }
+    
+    .gps-inactive {
+      color: var(--gps-inactive);
+    }
+    
+    .db-active {
+      color: #4cc9f0;
+    }
+    
+    .camera-active {
+      color: var(--field-green);
+    }
+    
+    .camera-inactive {
+      color: var(--gps-inactive);
+    }
+    
+    .trial-active {
+      color: var(--trial-badge);
+    }
+    
+    .progress-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      display: none;
+    }
+    
+    .progress-text {
+      color: #fff;
+      font-size: 1.5rem;
+      margin-top: 1rem;
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: var(--field-yellow);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    .counter {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      color: #fff;
+    }
+    
+    .instructions {
+      background: rgba(10,17,40,0.8);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      border: 2px solid var(--field-green);
+    }
+    
+    .instructions h3 {
+      color: var(--field-yellow);
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    
+    .instructions ul {
+      padding-left: 1.5rem;
+    }
+    
+    .instructions li {
+      margin-bottom: 0.8rem;
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    
+    .instructions li:before {
+      content: "•";
+      color: var(--field-yellow);
+      font-size: 1.5rem;
+      position: absolute;
+      left: 0;
+      top: -0.3rem;
+    }
+    
+    .permission-help {
+      background: rgba(244,67,54,0.2);
+      border-left: 4px solid var(--error);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .permission-help h4 {
+      color: #ff8a80;
+      margin-bottom: 0.5rem;
+    }
+    
+    .field-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      background: var(--field-orange);
+      color: white;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    
+    .trial-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      background: var(--trial-badge);
+      color: white;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    
+    .trial-notice {
+      background: rgba(244,67,54,0.2);
+      border-left: 4px solid var(--trial-badge);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+      text-align: center;
+    }
+    
+    .trial-notice h4 {
+      color: #ff8a80;
+      margin-bottom: 0.5rem;
+    }
+    
+    .upgrade-btn {
+      background: var(--trial-badge);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .upgrade-btn:hover {
+      background: #d32f2f;
+    }
+    
+    @media (max-width: 768px) {
+      .app-container {
+        padding: 1rem;
+      }
+      
+      .controls {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .status-bar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      
+      .gps-status, .db-status, .camera-status, .trial-status {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-header">
+    <h1 class="app-title"><i class="fas fa-camera"></i> Field Asset Capture <span class="field-badge">GPS Enabled</span> <span class="trial-badge">TRIAL</span></h1>
+  </div>
+  
+  <div class="app-container">
+    <div class="trial-notice">
+      <h4><i class="fas fa-exclamation-triangle"></i> Trial Version</h4>
+      <p>You are using a trial version limited to 5 asset captures. <span id="trialDaysLeft"></span> days remaining in your trial period.</p>
+      <button class="upgrade-btn" id="upgradeBtn"><i class="fas fa-crown"></i> Upgrade to Full Version</button>
+    </div>
+    
+    <div id="cameraContainer">
+      <video id="view" autoplay playsinline></video>
+      <button id="snap"><i class="fas fa-camera"></i></button>
+      <div id="cameraPlaceholder" class="camera-placeholder" style="display:none">
+        <i class="fas fa-video-slash"></i>
+        <h3>Camera Access Required</h3>
+        <p>To use this field app, please allow camera access. This is required to capture asset photos with GPS coordinates.</p>
+        <div class="permission-help">
+          <h4>How to enable camera access:</h4>
+          <ul>
+            <li>Look for the camera permission prompt</li>
+            <li>Check your browser's address bar for a camera icon</li>
+            <li>Go to browser settings → Privacy → Camera permissions</li>
+            <li>Refresh after granting permissions</li>
+          </ul>
+        </div>
+        <button id="retryCamera" class="btn btn-error"><i class="fas fa-redo"></i> Retry Camera</button>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="switchCamera" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Switch Camera</button>
+      <button id="toggleFlash" class="btn btn-primary"><i class="fas fa-bolt"></i> Flash: Off</button>
+      <button id="exportCSV" class="btn btn-warning"><i class="fas fa-file-csv"></i> Export CSV</button>
+      <button id="exportImages" class="btn btn-warning"><i class="fas fa-file-image"></i> Export Images</button>
+    </div>
+    
+    <div class="status-bar">
+      <div class="camera-status">
+        <i id="cameraIcon" class="fas fa-video camera-inactive"></i>
+        <span id="cameraStatus">Camera: Initializing…</span>
+      </div>
+      <div class="gps-status">
+        <i id="gpsIcon" class="fas fa-map-marker-alt gps-active"></i>
+        <span id="gpsStatus">GPS: Active</span>
+      </div>
+      <div class="db-status">
+        <i id="dbIcon" class="fas fa-database db-active"></i>
+        <span>Records: <span id="recordCount">0</span>/5</span>
+      </div>
+      <div class="trial-status">
+        <i id="trialIcon" class="fas fa-hourglass-half trial-active"></i>
+        <span id="trialStatus">Trial: 5 saves left</span>
+      </div>
+    </div>
+    
+    <div id="formArea">
+      <h3 class="form-title"><i class="fas fa-clipboard-check"></i> Asset Details</h3>
+      <div class="form-group">
+        <label for="num"><i class="fas fa-hashtag"></i> Asset Number</label>
+        <input type="text" required id="num" placeholder="Enter asset number">
+      </div>
+      <div class="form-group">
+        <label for="desc"><i class="fas fa-align-left"></i> Description</label>
+        <input type="text" required id="desc" placeholder="Enter description">
+      </div>
+      <div class="form-group">
+        <label for="notes"><i class="fas fa-sticky-note"></i> Notes</label>
+        <textarea id="notes" rows="3" placeholder="Additional field notes"></textarea>
+      </div>
+      <button id="save" class="btn btn-success"><i class="fas fa-save"></i> Save Asset with GPS</button>
+      <div id="msg"></div>
+    </div>
+    
+    <div class="instructions">
+      <h3><i class="fas fa-info-circle"></i> Field Operation Guide</h3>
+      <ul>
+        <li>Capture photos with the large yellow camera button</li>
+        <li>Each photo automatically includes GPS coordinates</li>
+        <li>Fill in asset details before saving</li>
+        <li>Export data for office processing when back online</li>
+        <li>Green GPS indicator confirms location is being recorded</li>
+        <li>Switch cameras for different viewing angles</li>
+        <li><strong>Trial version limited to 5 asset captures</strong></li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="progress-overlay" id="progressOverlay">
+    <div class="spinner"></div>
+    <div class="progress-text" id="progressText">Processing Field Data…</div>
+    <div class="counter" id="progressCounter">Preparing export</div>
+  </div>
+
+  <script>
+    /* ---------- Trial Version Settings ---------- */
+    const TRIAL_LIMIT = 5; // Maximum number of assets that can be saved
+    const TRIAL_DAYS = 30; // Trial period in days
+    
+    // Get trial start date from localStorage or set it now
+    let trialStartDate = localStorage.getItem('trialStartDate');
+    if (!trialStartDate) {
+      trialStartDate = new Date().toISOString();
+      localStorage.setItem('trialStartDate', trialStartDate);
+    }
+    
+    // Calculate days left in trial
+    function getDaysLeft() {
+      const start = new Date(trialStartDate);
+      const now = new Date();
+      const diffTime = Math.abs(now - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, TRIAL_DAYS - diffDays);
+    }
+    
+    // Update trial status display
+    function updateTrialStatus() {
+      const daysLeft = getDaysLeft();
+      document.getElementById('trialDaysLeft').textContent = daysLeft;
+      
+      // Update trial status in status bar
+      const savedCount = parseInt(localStorage.getItem('savedCount') || '0');
+      const savesLeft = Math.max(0, TRIAL_LIMIT - savedCount);
+      document.getElementById('trialStatus').textContent = `Trial: ${savesLeft} saves left`;
+      
+      // Update record count to show limit
+      document.getElementById('recordCount').textContent = savedCount;
+      
+      // Disable save button if limit reached
+      const saveBtn = document.getElementById('save');
+      if (savesLeft <= 0) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-ban"></i> Trial Limit Reached';
+        document.getElementById('msg').textContent = 'Trial limit reached. Upgrade to save more assets.';
+        document.getElementById('msg').style.color = '#e5383b';
+      }
+    }
+    
+    // Initialize trial status
+    updateTrialStatus();
+    
+    // Upgrade button handler
+    document.getElementById('upgradeBtn').addEventListener('click', () => {
+      alert('Upgrade to the full version to unlock unlimited asset captures and additional features.');
+    });
+    
+    /* ---------- IndexedDB ---------- */
+    const dbName = 'FieldAssetDB', storeName = 'assets';
+    let db;
+    const openDB = () => {
+      const req = indexedDB.open(dbName, 1);
+      req.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+          const store = db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+          store.createIndex('ts', 'ts');
+          store.createIndex('location', ['lat', 'lng']);
+        }
+      };
+      req.onsuccess = (event) => { 
+        db = event.target.result; 
+        updateRecordCount(); 
+      };
+      req.onerror = (event) => console.error('Database error:', event.target.error);
+    };
+    openDB();
+    
+    function updateRecordCount() {
+      if (!db) return;
+      const tx = db.transaction([storeName], 'readonly');
+      const store = tx.objectStore(storeName);
+      const req = store.count();
+      req.onsuccess = () => {
+        const count = req.result;
+        // Save count to localStorage for trial tracking
+        localStorage.setItem('savedCount', count.toString());
+        updateTrialStatus();
+      };
+    }
+    
+    /* ---------- Camera ---------- */
+    const view = document.getElementById('view');
+    const snapBtn = document.getElementById('snap');
+    const formArea = document.getElementById('formArea');
+    const switchBtn = document.getElementById('switchCamera');
+    const flashBtn = document.getElementById('toggleFlash');
+    const retryBtn = document.getElementById('retryCamera');
+    const camIcon = document.getElementById('cameraIcon');
+    const camStatus = document.getElementById('cameraStatus');
+    let stream = null, facing = 'environment', flashOn = false;
+    
+    function updateCamState(text, active) {
+      camStatus.textContent = `Camera: ${text}`;
+      camIcon.className = active ? 'fas fa-video camera-active' : 'fas fa-video-slash camera-inactive';
+    }
+    
+    async function initCam(facingMode) {
+      updateCamState('Starting...', false);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      
+      try {
+        const constraints = { 
+          video: { 
+            facingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }, 
+          audio: false 
+        };
+        
+        const s = await navigator.mediaDevices.getUserMedia(constraints);
+        stream = s; 
+        view.srcObject = s; 
+        facing = facingMode;
+        
+        s.getVideoTracks()[0].onstart = () => updateCamState('Active', true);
+        s.getVideoTracks()[0].onended = () => updateCamState('Disconnected', false);
+        
+        // Show camera placeholder if no stream
+        document.getElementById('cameraPlaceholder').style.display = 'none';
+      } catch (err) {
+        updateCamState('Access denied', false);
+        document.getElementById('cameraPlaceholder').style.display = 'block';
+        document.querySelector('.camera-placeholder p').textContent = 
+          err.name === 'NotAllowedError' ? 'Camera permission denied' : err.message;
+      }
+    }
+    
+    // Initialize camera
+    initCam(facing);
+    
+    // Event listeners
+    switchBtn.addEventListener('click', () => {
+      initCam(facing === 'environment' ? 'user' : 'environment');
+    });
+    
+    flashBtn.addEventListener('click', () => { 
+      flashOn = !flashOn; 
+      flashBtn.innerHTML = `<i class="fas fa-bolt"></i> Flash: ${flashOn ? 'On' : 'Off'}`; 
+    });
+    
+    retryBtn.addEventListener('click', () => initCam(facing));
+    
+    /* ---------- Geolocation ---------- */
+    let pos = { lat: null, lng: null, accuracy: null, timestamp: null };
+    const gpsIcon = document.getElementById('gpsIcon');
+    const gpsStatus = document.getElementById('gpsStatus');
+    
+    function updateGPSStatus() {
+      if (pos.lat && pos.lng) {
+        const accuracy = Math.round(pos.accuracy);
+        gpsStatus.textContent = `GPS: Active (${accuracy}m)`;
+        gpsIcon.className = 'fas fa-map-marker-alt gps-active';
+      } else {
+        gpsStatus.textContent = 'GPS: Acquiring...';
+        gpsIcon.className = 'fas fa-map-marker-alt gps-inactive';
+      }
+    }
+    
+    function initGeolocation() {
+      if (!navigator.geolocation) {
+        gpsStatus.textContent = 'GPS: Not supported';
+        return;
+      }
+      
+      // Set up continuous position updates
+      navigator.geolocation.watchPosition(
+        (position) => {
+          pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp
+          };
+          updateGPSStatus();
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          let message = 'Error';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              message = 'Permission denied';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message = 'Position unavailable';
+              break;
+            case error.TIMEOUT:
+              message = 'Timeout';
+              break;
+          }
+          gpsStatus.textContent = `GPS: ${message}`;
+          gpsIcon.className = 'fas fa-map-marker-alt gps-inactive';
+        },
+        { 
+          enableHighAccuracy: true, 
+          maximumAge: 10000,
+          timeout: 15000
+        }
+      );
+    }
+    
+    // Initialize GPS
+    initGeolocation();
+    
+    /* ---------- Capture ---------- */
+    let stampedBlob = null;
+    snapBtn.onclick = () => {
+      // Check if trial limit reached
+      const savedCount = parseInt(localStorage.getItem('savedCount') || '0');
+      if (savedCount >= TRIAL_LIMIT) {
+        document.getElementById('msg').textContent = 'Trial limit reached. Upgrade to save more assets.';
+        document.getElementById('msg').style.color = '#e5383b';
+        return;
+      }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = view.videoWidth;
+      canvas.height = view.videoHeight + 100; // Space for metadata
+      const ctx = canvas.getContext('2d');
+      
+      // Draw the video frame
+      ctx.drawImage(view, 0, 0, canvas.width, canvas.height - 100);
+      
+      // Create metadata bar
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+      
+      // Set text styles
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px Arial';
+      
+      // Add timestamp
+      const now = new Date();
+      ctx.fillText(`Captured: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 20, canvas.height - 75);
+      
+      // Add location if available
+      if (pos.lat) {
+        ctx.fillText(`Location: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`, 20, canvas.height - 50);
+        ctx.fillText(`Accuracy: ${Math.round(pos.accuracy)} meters`, 20, canvas.height - 25);
+      }
+      
+      // Add trial watermark
+      ctx.fillStyle = 'rgba(244, 67, 54, 0.7)';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('TRIAL VERSION', canvas.width / 2, 40);
+      ctx.textAlign = 'left'; // Reset alignment
+      
+      // Convert to blob
+      canvas.toBlob((blob) => { 
+        stampedBlob = blob; 
+        formArea.style.display = 'block'; 
+        snapBtn.style.display = 'none';
+        document.getElementById('msg').textContent = 'Photo captured! Complete details below';
+      }, 'image/jpeg', 0.9);
+    };
+
+    /* ---------- Save ---------- */
+    document.getElementById('save').onclick = () => {
+      if (!stampedBlob) { 
+        document.getElementById('msg').textContent = 'No photo captured!'; 
+        document.getElementById('msg').style.color = '#e5383b';
+        return; 
+      }
+      
+      // Check if trial limit reached
+      const savedCount = parseInt(localStorage.getItem('savedCount') || '0');
+      if (savedCount >= TRIAL_LIMIT) {
+        document.getElementById('msg').textContent = 'Trial limit reached. Upgrade to save more assets.';
+        document.getElementById('msg').style.color = '#e5383b';
+        return;
+      }
+      
+      const num = document.getElementById('num').value.trim();
+      const desc = document.getElementById('desc').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+      
+      if (!num || !desc) { 
+        document.getElementById('msg').textContent = 'Asset number and description required!';
+        document.getElementById('msg').style.color = '#e5383b';
+        return; 
+      }
+      
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        // Redraw the metadata bar with updated info
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+        
+        // Timestamp
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px Arial';
+        const now = new Date();
+        ctx.fillText(`Captured: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 20, canvas.height - 75);
+        
+        // Location
+        if (pos.lat) {
+          ctx.fillText(`Location: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`, 20, canvas.height - 50);
+          ctx.fillText(`Accuracy: ${Math.round(pos.accuracy)} meters`, 20, canvas.height - 25);
+        }
+        
+        // Asset info
+        ctx.fillStyle = '#ffd60a';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`Asset: ${num} - ${desc}`, 20, canvas.height - 5);
+        
+        // Add trial watermark
+        ctx.fillStyle = 'rgba(244, 67, 54, 0.7)';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('TRIAL VERSION', canvas.width / 2, 40);
+        ctx.textAlign = 'left'; // Reset alignment
+        
+        // Convert to blob and save
+        canvas.toBlob((blob) => {
+          const tx = db.transaction([storeName], 'readwrite');
+          const store = tx.objectStore(storeName);
+          const req = store.add({ 
+            num, 
+            desc, 
+            notes, 
+            img: blob, 
+            lat: pos.lat, 
+            lng: pos.lng, 
+            accuracy: pos.accuracy,
+            ts: now.toISOString() 
+          });
+          
+          req.onsuccess = () => {
+            // Update saved count
+            const newCount = savedCount + 1;
+            localStorage.setItem('savedCount', newCount.toString());
+            
+            document.getElementById('msg').textContent = `Asset #${num} saved! (${newCount}/${TRIAL_LIMIT})`;
+            document.getElementById('msg').style.color = '#38b000';
+            updateRecordCount();
+            
+            setTimeout(() => {
+              formArea.style.display = 'none';
+              snapBtn.style.display = 'block';
+              document.getElementById('num').value = '';
+              document.getElementById('desc').value = '';
+              document.getElementById('notes').value = '';
+              document.getElementById('msg').textContent = '';
+              
+              // Disable save button if limit reached
+              if (newCount >= TRIAL_LIMIT) {
+                const saveBtn = document.getElementById('save');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-ban"></i> Trial Limit Reached';
+              }
+            }, 2000);
+          };
+          
+          req.onerror = () => {
+            document.getElementById('msg').textContent = 'Error saving asset!';
+            document.getElementById('msg').style.color = '#e5383b';
+          };
+        }, 'image/jpeg', 0.9);
+      };
+      
+      img.src = URL.createObjectURL(stampedBlob);
+    };
+    
+    /* ---------- Export ---------- */
+    document.getElementById('exportCSV').onclick = () => {
+      if (!db) { 
+        alert('Database not available'); 
+        return; 
+      }
+      
+      const overlay = document.getElementById('progressOverlay');
+      overlay.style.display = 'flex';
+      document.getElementById('progressText').textContent = 'Preparing CSV Export...';
+      
+      const tx = db.transaction([storeName], 'readonly');
+      const store = tx.objectStore(storeName);
+      const req = store.getAll();
+      
+      req.onsuccess = () => {
+        const rows = req.result;
+        if (!rows.length) { 
+          overlay.style.display = 'none';
+          alert('No assets to export'); 
+          return; 
+        }
+        
+        let csv = 'ID,Asset Number,Description,Notes,Latitude,Longitude,Accuracy,Timestamp\n';
+        rows.forEach(r => {
+          csv += `${r.id},"${r.num}","${r.desc}","${r.notes.replace(/"/g,'""')}",${r.lat ?? ''},${r.lng ?? ''},${r.accuracy ?? ''},"${r.ts}"\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `field-assets-trial-${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => { 
+          document.body.removeChild(a); 
+          URL.revokeObjectURL(url); 
+          overlay.style.display = 'none';
+        }, 100);
+      };
+      
+      req.onerror = () => {
+        overlay.style.display = 'none';
+        alert('Error exporting data');
+      };
+    };
+    
+    document.getElementById('exportImages').onclick = () => {
+      if (!db) { 
+        alert('Database not available'); 
+        return; 
+      }
+      
+      const overlay = document.getElementById('progressOverlay');
+      const counter = document.getElementById('progressCounter');
+      overlay.style.display = 'flex';
+      document.getElementById('progressText').textContent = 'Preparing Image Export...';
+      
+      const tx = db.transaction([storeName], 'readonly');
+      const store = tx.objectStore(storeName);
+      const req = store.getAll();
+      
+      req.onsuccess = () => {
+        const rows = req.result;
+        if (!rows.length) { 
+          overlay.style.display = 'none';
+          alert('No images to export'); 
+          return; 
+        }
+        
+        let processed = 0;
+        const total = rows.length;
+        
+        function exportNext(index) {
+          if (index >= total) {
+            overlay.style.display = 'none';
+            alert(`Exported ${total} field images`);
+            return;
+          }
+          
+          counter.textContent = `${index + 1}/${total}`;
+          const asset = rows[index];
+          const url = URL.createObjectURL(asset.img);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `field-asset-trial-${asset.id}-${asset.num || 'unnamed'}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          
+          setTimeout(() => { 
+            document.body.removeChild(a); 
+            URL.revokeObjectURL(url); 
+            exportNext(index + 1);
+          }, 200);
+        }
+        
+        exportNext(0);
+      };
+      
+      req.onerror = () => {
+        overlay.style.display = 'none';
+        alert('Error exporting images');
+      };
+    };
+  </script>
+</body>
+</html>
